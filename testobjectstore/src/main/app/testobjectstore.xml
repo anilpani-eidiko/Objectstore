@@ -46,7 +46,7 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
         </idempotent-message-filter>
         <set-payload value="YAY!" doc:name="Set Payload" />
         <catch-exception-strategy doc:name="Catch Exception Strategy">
-            <set-payload value="NAY!" doc:name="Set Payload" />
+            <set-payload value="NAY!togit" doc:name="Set Payload" />
         </catch-exception-strategy>
     </flow>
 
