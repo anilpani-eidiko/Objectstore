@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:request-config name="HTTP_Request_Configuration" protocol="HTTPS" host="api.ciscospark.com" port="443" doc:name="HTTP Request Configuration"/>
+    <flow name="testscriptsFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/ts" allowedMethods="post" doc:name="HTTP"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+
+%output application/json
+---
+
+
+
+{
+	t: payload.events filter ($.rowId?)  groupBy $.rowId
+	
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="jira_listRooms"> <http:listener config-ref="HTTP_Listener_Configuration" path="/listRooms" doc:name="HTTP"/> <set-variable variableName="token" value="#['Bearer MDcyMWZiZTYtZDU5Zi00Y2QxLTk4MmMtNWVlNTFkZDY2YWM3ZDU1YTRkMzAtMWU3']" doc:name="Variable"/> <http:request config-ref="HTTP_Request_Configuration" path="/v1/rooms" method="GET" doc:name="HTTP"> <http:request-builder>
+                <http:header headerName="Authorization" value="#[flowVars.token]"/>
+ </http:request-builder> </http:request> <logger message="#[message.payloadAs(java.lang.String)]" level="INFO" doc:name="Logger"/> <dw:transform-message doc:name="Transform Message"> <dw:set-variable variableName="rooms"><![CDATA[%dw 1.0
+%output application/java 
+---
+ payload]]></dw:set-variable> </dw:transform-message> <http:request config-ref="HTTP_Request_Configuration" path="/v1/memberships" method="GET" doc:name="HTTP"> <http:request-builder>
+                <http:header headerName="Authorization" value="#[flowVars.token]"/>
+ </http:request-builder> </http:request> <logger message="listMembership #[message.payloadAs(java.lang.String)]" level="INFO" doc:name="Logger"/> <dw:transform-message doc:name="Transform Message"> <dw:set-variable variableName="memberships"><![CDATA[%dw 1.0 
+%output application/java
+ ---
+  payload]]></dw:set-variable> </dw:transform-message> <dw:transform-message doc:name="Transform Message"> <dw:set-payload><![CDATA[%dw 1.0
+ %output application/json skipNullOn = "everywhere" 
+---
+ flowVars.memberships.items filter ( $.isModerator == true ) map ( (p,q)->
+ 	{
+ 		rt:flowVars.rooms.items filter  (p.roomId == $.id and $.type =="group") map 
+ 		{
+ 			t:$.id 
+ 		}
+ 	}
+)]]></dw:set-payload>
+</dw:transform-message>
+<logger message="#[json:t]" level="INFO" doc:name="Logger"/>
+</flow>
+</mule>
