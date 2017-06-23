@@ -62,7 +62,7 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
                 <logger message="This eventually happens." doc:name="Logger" />
             </processor-chain>
         </until-successful>
-        <set-payload value="Completed" doc:name="Set Payload" />
+        <set-payload value="Completed for git hub" doc:name="Set Payload" />
     </flow>
  
 </mule>
